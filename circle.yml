@@ -1,0 +1,32 @@
+general:
+  branches:
+    only:
+      - master
+
+machine:
+  environment:
+    GOOGLE_APPLICATION_CREDENTIALS: ${HOME}/account-auth.json
+  services:
+    - docker
+
+dependencies:
+  cache_directories:
+    - /opt/google-cloud-sdk
+  override:
+    - sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update
+    - echo $GCLOUD_SERVICE_KEY | base64 --decode -i > ${HOME}/account-auth.json
+    - sudo /opt/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file ${HOME}/account-auth.json
+    - sudo /opt/google-cloud-sdk/bin/gcloud config set project $PROJECT_NAME
+    - sudo /opt/google-cloud-sdk/bin/gcloud docker -- pull asia.gcr.io/${PROJECT_NAME}/supervisor-slack:latest || true
+    - ./build.sh
+
+test:
+  override:
+    - echo "No test"
+
+deployment:
+  production:
+    branch: master
+    commands:
+      - sudo /opt/google-cloud-sdk/bin/gcloud docker -- push asia.gcr.io/${PROJECT_NAME}/supervisor-slack:latest
+

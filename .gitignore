@@ -1,0 +1,5 @@
+venv
+conf/supervisord.conf
+supervisord.log
+supervisord.pid
+conf/slack.cfg

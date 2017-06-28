@@ -23,6 +23,7 @@ jobs:
           command: |
             gcloud docker -- pull asia.gcr.io/${PROJECT_NAME}/supervisor-slack:latest || true
             docker build --cache-from asia.gcr.io/${PROJECT_NAME}/supervisor-slack:latest -t supervisor-slack .
+            docker tag supervisor-slack:latest asia.gcr.io/${PROJECT_NAME}/supervisor-slack:latest
       - run:
           name: Push image
           command: gcloud docker -- push asia.gcr.io/${PROJECT_NAME}/supervisor-slack:latest

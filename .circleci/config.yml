@@ -5,6 +5,7 @@ jobs:
     branches:
       only:
         - master
+        - stretch
     docker:
       - image: lakoo/node-gcloud-docker
     environment:
@@ -21,9 +22,9 @@ jobs:
       - run:
           name: Build image
           command: |
-            gcloud docker -- pull asia.gcr.io/${PROJECT_NAME}/supervisor-slack:latest || true
-            docker build --cache-from asia.gcr.io/${PROJECT_NAME}/supervisor-slack:latest -t supervisor-slack .
-            docker tag supervisor-slack:latest asia.gcr.io/${PROJECT_NAME}/supervisor-slack:latest
+            gcloud docker -- pull asia.gcr.io/${PROJECT_NAME}/supervisor-slack:stretch || true
+            docker build --cache-from asia.gcr.io/${PROJECT_NAME}/supervisor-slack:stretch -t supervisor-slack .
+            docker tag supervisor-slack:latest asia.gcr.io/${PROJECT_NAME}/supervisor-slack:stretch
       - run:
           name: Push image
-          command: gcloud docker -- push asia.gcr.io/${PROJECT_NAME}/supervisor-slack:latest
+          command: gcloud docker -- push asia.gcr.io/${PROJECT_NAME}/supervisor-slack:stretch

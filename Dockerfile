@@ -1,4 +1,4 @@
-FROM python:2-slim
+FROM lakoo/python:2.7-slim
 RUN mkdir /supervisor-slack
 WORKDIR /supervisor-slack
 COPY requirements.txt /supervisor-slack/

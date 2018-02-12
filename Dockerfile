@@ -1,4 +1,4 @@
-FROM python:2-slim
+FROM python:2.7-slim-stretch
 RUN mkdir /supervisor-slack
 WORKDIR /supervisor-slack
 COPY requirements.txt /supervisor-slack/

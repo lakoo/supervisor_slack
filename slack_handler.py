@@ -9,6 +9,10 @@ f = file(os.path.join(os.path.dirname(__file__), 'conf/slack.cfg'))
 cfg = Config(f)
 
 slack = slackweb.Slack(url=cfg.slack_url)
+if hasattr(cfg, 'slack_channel') and cfg.slack_channel != '':
+    slack_channel=cfg.slack_channel if cfg.slack_channel[0] == '#' else '#' + cfg.slack_channel
+else:
+    slack_channel=''
 
 def write_stdout(s):
     # only eventlistener protocol messages may be sent to stdout
@@ -34,25 +38,25 @@ def main():
             attachments = []
             attachment = {"title": cfg.messages.start.title, "color": "warning", "text": cfg.messages.start.text}
             attachments.append(attachment)
-            slack.notify(attachments=attachments)
+            slack.notify(attachments=attachments, channel=slack_channel)
 
         elif 'PROCESS_STATE_STARTED' == headers['eventname'] or 'PROCESS_STATE_RUNNING' == headers['eventname']:
             attachments = []
             attachment = {"title": cfg.messages.running.title, "color": "good", "text": cfg.messages.running.text}
             attachments.append(attachment)
-            slack.notify(attachments=attachments)
+            slack.notify(attachments=attachments, channel=slack_channel)
 
         elif 'PROCESS_STATE_EXITED' == headers['eventname'] or 'PROCESS_STATE_STOPPED' == headers['eventname']:
             attachments = []
             attachment = {"title": cfg.messages.stop.title, "color": "danger", "text": cfg.messages.stop.text}
             attachments.append(attachment)
-            slack.notify(attachments=attachments)
+            slack.notify(attachments=attachments, channel=slack_channel)
 
         elif 'PROCESS_STATE_FATAL' == headers['eventname']:
             attachments = []
             attachment = {"title": cfg.messages.fatal.title, "color": "danger", "text": cfg.messages.fatal.text}
             attachments.append(attachment)
-            slack.notify(attachments=attachments)
+            slack.notify(attachments=attachments, channel=slack_channel)
 
         # transition from READY to ACKNOWLEDGED
         write_stdout('RESULT 2\nOK')

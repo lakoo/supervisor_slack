@@ -22,3 +22,4 @@ messages:
 	}
 }
 slack_url: "https://hooks.slack.com/services/XXXXXXXXXXXXXXXXXXX"
+slack_channel: "Channel name or Empty String for default channel"

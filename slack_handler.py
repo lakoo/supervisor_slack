@@ -4,6 +4,10 @@ import sys
 import slackweb
 import os
 from config import Config
+try:
+    from urllib.error import HTTPError
+except ImportError:
+    from urllib2 import HTTPError
 
 f = file(os.path.join(os.path.dirname(__file__), 'conf/slack.cfg'))
 cfg = Config(f)
@@ -23,6 +27,13 @@ def write_stderr(s):
     sys.stderr.write(s)
     sys.stderr.flush()
 
+def notify(title, color, text):
+    attachments = [{'title': title, 'color': color, 'text': text}]
+    try:
+        slack.notify(attachments=attachments, channel=slack_channel)
+    except HTTPError as err:
+        write_stderr(str(err))
+
 def main():
     while 1:
         # transition from ACKNOWLEDGED to READY
@@ -35,28 +46,16 @@ def main():
         headers = dict([ x.split(':') for x in line.split() ])
         data = sys.stdin.read(int(headers['len']))
         if 'PROCESS_STATE_STARTING' == headers['eventname']:
-            attachments = []
-            attachment = {"title": cfg.messages.start.title, "color": "warning", "text": cfg.messages.start.text}
-            attachments.append(attachment)
-            slack.notify(attachments=attachments, channel=slack_channel)
+            notify(cfg.messages.start.title, 'warning', cfg.messages.start.text)
 
         elif 'PROCESS_STATE_STARTED' == headers['eventname'] or 'PROCESS_STATE_RUNNING' == headers['eventname']:
-            attachments = []
-            attachment = {"title": cfg.messages.running.title, "color": "good", "text": cfg.messages.running.text}
-            attachments.append(attachment)
-            slack.notify(attachments=attachments, channel=slack_channel)
+            notify(cfg.messages.running.title, 'good', cfg.messages.running.text)
 
         elif 'PROCESS_STATE_EXITED' == headers['eventname'] or 'PROCESS_STATE_STOPPED' == headers['eventname']:
-            attachments = []
-            attachment = {"title": cfg.messages.stop.title, "color": "danger", "text": cfg.messages.stop.text}
-            attachments.append(attachment)
-            slack.notify(attachments=attachments, channel=slack_channel)
+            notify(cfg.messages.stop.title, 'danger', cfg.messages.stop.text)
 
         elif 'PROCESS_STATE_FATAL' == headers['eventname']:
-            attachments = []
-            attachment = {"title": cfg.messages.fatal.title, "color": "danger", "text": cfg.messages.fatal.text}
-            attachments.append(attachment)
-            slack.notify(attachments=attachments, channel=slack_channel)
+            notify(cfg.messages.fatal.title, 'danger', cfg.messages.fatal.text)
 
         # transition from READY to ACKNOWLEDGED
         write_stdout('RESULT 2\nOK')

@@ -13,6 +13,8 @@ except ImportError:
 f = file(os.path.join(os.path.dirname(__file__), 'conf/slack.cfg'))
 cfg = Config(f)
 
+SUPERVISOR_PROCESS_NAME = os.getenv('SUPERVISOR_PROCESS_NAME')
+
 slack = slackweb.Slack(url=cfg.slack_url)
 if hasattr(cfg, 'slack_channel') and cfg.slack_channel != '':
     slack_channel=cfg.slack_channel if cfg.slack_channel[0] == '#' else '#' + cfg.slack_channel
@@ -39,23 +41,27 @@ def main():
         # transition from ACKNOWLEDGED to READY
         write_stdout('READY\n')
 
-        # read header line and print it to stderr
+        # read header line
         line = sys.stdin.readline()
-
-        # read event payload and print it to stderr
         headers = dict([ x.split(':') for x in line.split() ])
+
+        # read event payload
         data = sys.stdin.read(int(headers['len']))
-        if 'PROCESS_STATE_STARTING' == headers['eventname']:
-            notify(cfg.messages.start.title, 'warning', cfg.messages.start.text)
+        payload = dict([ x.split(':') for x in data.split() ])
 
-        elif 'PROCESS_STATE_STARTED' == headers['eventname'] or 'PROCESS_STATE_RUNNING' == headers['eventname']:
-            notify(cfg.messages.running.title, 'good', cfg.messages.running.text)
+        # filter self process name
+        if SUPERVISOR_PROCESS_NAME != payload['processname']:
+            if 'PROCESS_STATE_STARTING' == headers['eventname']:
+                notify(cfg.messages.start.title, 'warning', cfg.messages.start.text)
 
-        elif 'PROCESS_STATE_EXITED' == headers['eventname'] or 'PROCESS_STATE_STOPPED' == headers['eventname']:
-            notify(cfg.messages.stop.title, 'danger', cfg.messages.stop.text)
+            elif 'PROCESS_STATE_STARTED' == headers['eventname'] or 'PROCESS_STATE_RUNNING' == headers['eventname']:
+                notify(cfg.messages.running.title, 'good', cfg.messages.running.text)
 
-        elif 'PROCESS_STATE_FATAL' == headers['eventname']:
-            notify(cfg.messages.fatal.title, 'danger', cfg.messages.fatal.text)
+            elif 'PROCESS_STATE_EXITED' == headers['eventname'] or 'PROCESS_STATE_STOPPED' == headers['eventname']:
+                notify(cfg.messages.stop.title, 'danger', cfg.messages.stop.text)
+
+            elif 'PROCESS_STATE_FATAL' == headers['eventname']:
+                notify(cfg.messages.fatal.title, 'danger', cfg.messages.fatal.text)
 
         # transition from READY to ACKNOWLEDGED
         write_stdout('RESULT 2\nOK')

@@ -4,6 +4,7 @@ import sys
 import slackweb
 import os
 from config import Config
+import logging
 try:
     from urllib.error import HTTPError
 except ImportError:
@@ -23,18 +24,17 @@ def write_stdout(s):
     sys.stdout.write(s)
     sys.stdout.flush()
 
-def write_stderr(s):
-    sys.stderr.write(s)
-    sys.stderr.flush()
-
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 def notify(title, color, text):
     attachments = [{'title': title, 'color': color, 'text': text}]
     try:
         slack.notify(attachments=attachments, channel=slack_channel)
     except HTTPError as err:
-        write_stderr(str(err))
+        logging.error(str(err))
 
 def main():
+    logging.info('slack handler started')
+
     while 1:
         # transition from ACKNOWLEDGED to READY
         write_stdout('READY\n')
